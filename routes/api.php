@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PoliController;
 use App\Http\Controllers\Api\AntrianController;
 
+
 /*
 |--------------------------------------------------------------------------
 | API Routes

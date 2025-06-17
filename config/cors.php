@@ -6,8 +6,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Hanya izinkan origin dari aplikasi Ionic saat dev
-    'allowed_origins' => ['http://localhost:8100'],
+    // ✅ Tambahkan dua port Ionic (8100 dan 8101)
+    'allowed_origins' => [
+        'http://localhost:8100',
+        'http://localhost:8101',
+    ],
 
     'allowed_origins_patterns' => [],
 
