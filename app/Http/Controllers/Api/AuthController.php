@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pasien;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -23,7 +24,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'nik' => $request->nik,
             'no_hp' => $request->no_hp,
-            'password' => Hash::make($request->password), // pastikan password di-hash di sini
+            'password' => Hash::make($request->password),
         ]);
 
         $token = $pasien->createToken('pasien_token')->plainTextToken;
@@ -44,14 +45,30 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        Log::info('Percobaan login', [
+            'nik' => $request->nik,
+            // Jangan log password demi keamanan
+        ]);
+
         $pasien = Pasien::where('nik', $request->nik)->first();
 
-        if (!$pasien || !Hash::check($request->password, $pasien->password)) {
+        if (!$pasien) {
+            Log::warning('Login gagal: NIK tidak ditemukan', ['nik' => $request->nik]);
             return response()->json([
                 'status' => false,
                 'message' => 'NIK atau password salah',
             ], 401);
         }
+
+        if (!Hash::check($request->password, $pasien->password)) {
+            Log::warning('Login gagal: Password salah', ['nik' => $request->nik]);
+            return response()->json([
+                'status' => false,
+                'message' => 'NIK atau password salah',
+            ], 401);
+        }
+
+        Log::info('Login berhasil', ['nik' => $request->nik]);
 
         $token = $pasien->createToken('pasien_token')->plainTextToken;
 
