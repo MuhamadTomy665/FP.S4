@@ -20,14 +20,17 @@ class AntrianController extends Controller
                 'jam' => 'required|string|max:10',
             ]);
 
+            // ✅ Hitung jumlah antrian untuk poli dan tanggal tersebut
             $jumlahAntrianHariIni = Antrian::where('poli', $validated['poli'])
                 ->where('tanggal', $validated['tanggal'])
                 ->count();
 
-            $nomorAntrian = $jumlahAntrianHariIni + 1;
-            $kode = 'ANTRI-' . $validated['pasien_id'] . '-' . now()->format('YmdHis');
+            // ✅ Buat nomor antrian format A0001, A0002, ...
+            $nomorUrut = $jumlahAntrianHariIni + 1;
+            $nomorAntrian = 'A' . sprintf('%04d', $nomorUrut); // A0001
 
-            // ✅ Ganti Barcode ke QR Code (base64 PNG)
+            // ✅ Kode QR tetap gunakan format unik
+            $kode = 'ANTRI-' . $validated['pasien_id'] . '-' . now()->format('YmdHis');
             $qrCodeBase64 = base64_encode(
                 QrCode::format('png')->size(250)->generate($kode)
             );
@@ -38,8 +41,8 @@ class AntrianController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'jam' => $validated['jam'],
                 'status' => 'menunggu',
-                'nomor_antrian' => $nomorAntrian,
-                'barcode_code' => $qrCodeBase64, // ⬅️ Simpan base64 QR code
+                'nomor_antrian' => $nomorAntrian, // ⬅️ Gunakan nomor antrian yang diformat
+                'barcode_code' => $qrCodeBase64,
             ]);
 
             return response()->json([
