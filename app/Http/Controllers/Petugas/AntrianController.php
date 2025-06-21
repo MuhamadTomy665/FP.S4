@@ -5,21 +5,16 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Antrian;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Events\PanggilAntrianEvent; // ✅ Event broadcasting untuk realtime
 
 class AntrianController extends Controller
 {
     public function index()
     {
-        $petugas = Auth::guard('petugas')->user();
-
-        // Ambil ID poli yang diakses petugas
-        $poliIds = $petugas->polis->pluck('id')->toArray();
-
-        // Ambil data antrian hari ini untuk poli yang diakses petugas
-        $dataAntrian = Antrian::whereDate('created_at', Carbon::today())
-            ->whereIn('poli_id', $poliIds)
+        // Ambil semua data antrian hari ini tanpa filter poli
+        $dataAntrian = Antrian::with('poli', 'pasien') // relasi poli dan pasien
+            ->whereDate('created_at', Carbon::today())
             ->orderBy('status')
             ->orderBy('created_at')
             ->get();
@@ -33,6 +28,9 @@ class AntrianController extends Controller
         $antrian->status = 'dipanggil';
         $antrian->waktu_dipanggil = now();
         $antrian->save();
+
+        // ✅ Kirim event real-time ke frontend (pasien)
+        event(new PanggilAntrianEvent($antrian));
 
         return redirect()->route('petugas.antrian.index')->with('success', 'Pasien telah dipanggil.');
     }

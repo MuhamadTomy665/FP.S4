@@ -40,7 +40,7 @@ class AntrianController extends Controller
                 'poli' => $validated['poli'],
                 'tanggal' => $validated['tanggal'],
                 'jam' => $validated['jam'],
-                'status' => 'menunggu',
+                'status' => 'antri',
                 'nomor_antrian' => $nomorAntrian, // ⬅️ Gunakan nomor antrian yang diformat
                 'barcode_code' => $qrCodeBase64,
             ]);

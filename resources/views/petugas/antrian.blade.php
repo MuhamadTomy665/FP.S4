@@ -12,7 +12,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
         </div>
     @endif
-    
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -32,10 +31,13 @@
                         @forelse($dataAntrian as $antrian)
                             <tr>
                                 <td><strong>{{ $antrian->nomor_antrian ?? $antrian->no_antrian }}</strong></td>
-                                <td>{{ $antrian->nama_pasien }}</td>
-                                <td>{{ $antrian->poli->nama_poli ?? '-' }}</td>
+                                <td>{{ $antrian->pasien->nama ?? '-' }}</td>
+                                <td>{{ $antrian->poli->nama_poli ?? $antrian->poli ?? '-' }}</td>
                                 <td>
                                     @switch($antrian->status)
+                                        @case('antri')
+                                            <span class="badge bg-info text-dark">Belum Waktunya</span>
+                                            @break
                                         @case('menunggu')
                                             <span class="badge bg-secondary">Menunggu</span>
                                             @break
@@ -45,6 +47,8 @@
                                         @case('selesai')
                                             <span class="badge bg-success">Selesai</span>
                                             @break
+                                        @default
+                                            <span class="badge bg-light text-muted">-</span>
                                     @endswitch
                                 </td>
                                 <td>{{ $antrian->created_at->format('H:i') }}</td>
@@ -69,7 +73,6 @@
                                         </button>
                                     @endif
 
-                                    {{-- Tombol Cetak Tiket --}}
                                     <form action="{{ route('petugas.antrian.cetak', $antrian->id) }}" method="GET" class="d-inline" target="_blank">
                                         <button class="btn btn-outline-dark btn-sm">
                                             <i class="bi bi-printer"></i> Cetak Tiket
