@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PoliController;
 use App\Http\Controllers\Api\AntrianController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -40,3 +39,4 @@ Route::get('/poli/{id}', [PoliController::class, 'show']); // detail satu poli
 // ==============================
 Route::post('/antrian', [AntrianController::class, 'store']);               // pasien mendaftar antrian
 Route::get('/antrian/terakhir/{id}', [AntrianController::class, 'terakhir']); // ✅ ambil antrian terakhir pasien
+Route::get('/antrian/riwayat/{id}', [AntrianController::class, 'riwayat']);   // ✅ ambil riwayat antrian pasien

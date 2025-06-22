@@ -10,7 +10,7 @@ class Antrian extends Model
     protected $table = 'tbl_antrian';
 
     protected $fillable = [
-        'user_id',
+        'pasien_id',         // ✅ Ganti dari 'user_id' ke 'pasien_id'
         'poli',
         'tanggal',
         'jam',
