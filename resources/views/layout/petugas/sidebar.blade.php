@@ -22,12 +22,9 @@
 
 <nav class="sidebar d-flex flex-column p-3 text-white position-fixed vh-100"
      style="width: 250px; background-color: #0d6efd; left: 0; top: 0; overflow-y: auto; z-index: 1000;">
-    
+
     <!-- Logo dan Judul -->
-    <a href="{{ route('petugas.dashboard') }}" class="d-flex align-items-center mb-3 text-white text-decoration-none">
-        <img src="{{ asset('images/logo-rs.png') }}" alt="Logo RS JIWA" width="40" height="40" class="me-2">
-        <span class="fs-5 fw-bold">Petugas Klinik</span>
-    </a>
+
     <hr class="text-white">
 
     <!-- Navigasi -->
@@ -52,12 +49,11 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-dark shadow">
                 <li>
-                    <a class="dropdown-item logout-link" href="#"
-                       onclick="event.preventDefault(); if(confirm('Yakin ingin logout?')) { document.getElementById('logout-form-petugas').submit(); }">
-                        <i class="bi bi-box-arrow-right me-2"></i>Logout
-                    </a>
-                    <form id="logout-form-petugas" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    <form id="logout-form-petugas" action="{{ route('logout') }}" method="POST" class="d-inline">
                         @csrf
+                        <button type="submit" class="dropdown-item logout-link">
+                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                        </button>
                     </form>
                 </li>
             </ul>

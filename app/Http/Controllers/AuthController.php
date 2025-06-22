@@ -15,14 +15,14 @@ class AuthController extends Controller
         ]);
 
         $credentials = $request->only('email', 'password');
-        $remember = $request->filled('remember'); // ✅ aman, true jika checkbox dicentang
+        $remember = $request->filled('remember');
 
-        // Coba login petugas dulu dengan guard 'petugas'
+        // Login sebagai petugas
         if (Auth::guard('petugas')->attempt($credentials, $remember)) {
-            return redirect()->route('petugas.dashboard');
+            return redirect()->route('petugas.antrian.index'); // ✅ route yang benar
         }
 
-        // Jika gagal, coba login user/admin dengan guard 'web'
+        // Login sebagai admin
         if (Auth::guard('web')->attempt($credentials, $remember)) {
             return redirect()->route('dashboard');
         }

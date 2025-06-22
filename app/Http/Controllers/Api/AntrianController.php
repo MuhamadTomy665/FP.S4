@@ -10,6 +10,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AntrianController extends Controller
 {
+    // ✅ Simpan Antrian Baru
     public function store(Request $request)
     {
         try {
@@ -20,18 +21,31 @@ class AntrianController extends Controller
                 'jam' => 'required|string|max:10',
             ]);
 
-            // ✅ Hitung jumlah antrian untuk poli dan tanggal tersebut
+            $kuotaPerJam = 10;
+
+            // Cek kuota
+            $jumlahPasienJamIni = Antrian::where('tanggal', $validated['tanggal'])
+                ->where('jam', $validated['jam'])
+                ->count();
+
+            if ($jumlahPasienJamIni >= $kuotaPerJam) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kuota untuk jam ini sudah penuh. Silakan pilih jam lain.'
+                ], 409);
+            }
+
+            // Hitung nomor antrian
             $jumlahAntrianHariIni = Antrian::where('poli', $validated['poli'])
                 ->where('tanggal', $validated['tanggal'])
                 ->count();
 
-            // ✅ Buat nomor antrian format A0001, A0002, ...
             $nomorUrut = $jumlahAntrianHariIni + 1;
-            $nomorAntrian = 'A' . sprintf('%04d', $nomorUrut); // A0001
+            $nomorAntrian = 'A' . sprintf('%04d', $nomorUrut);
 
-            // ✅ Kode QR tetap gunakan format unik
+            // Generate kode dan barcode (✅ prefix langsung ditambahkan)
             $kode = 'ANTRI-' . $validated['pasien_id'] . '-' . now()->format('YmdHis');
-            $qrCodeBase64 = base64_encode(
+            $qrCodeBase64 = 'data:image/png;base64,' . base64_encode(
                 QrCode::format('png')->size(250)->generate($kode)
             );
 
@@ -41,7 +55,7 @@ class AntrianController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'jam' => $validated['jam'],
                 'status' => 'antri',
-                'nomor_antrian' => $nomorAntrian, // ⬅️ Gunakan nomor antrian yang diformat
+                'nomor_antrian' => $nomorAntrian,
                 'barcode_code' => $qrCodeBase64,
             ]);
 
@@ -49,7 +63,7 @@ class AntrianController extends Controller
                 'success' => true,
                 'message' => 'Antrian berhasil disimpan.',
                 'data' => $antrian,
-                'barcode_image' => 'data:image/png;base64,' . $qrCodeBase64,
+                'barcode_image' => $qrCodeBase64,
                 'kode' => $kode,
             ], 201);
 
@@ -64,6 +78,7 @@ class AntrianController extends Controller
         }
     }
 
+    // ✅ Ambil Antrian Terakhir untuk Pasien
     public function terakhir($pasien_id)
     {
         try {
@@ -81,7 +96,7 @@ class AntrianController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $antrian,
-                'barcode_image' => 'data:image/png;base64,' . $antrian->barcode_code,
+                'barcode_image' => $antrian->barcode_code,
                 'kode' => 'ANTRI-' . $antrian->pasien_id . '-' . $antrian->id,
             ], 200);
 
@@ -91,6 +106,37 @@ class AntrianController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ✅ Ambil Semua Riwayat Antrian untuk Pasien
+    public function riwayat($pasien_id)
+    {
+        try {
+            $riwayat = Antrian::where('pasien_id', $pasien_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // ✅ Pastikan semua barcode_code sudah punya prefix
+            foreach ($riwayat as $item) {
+                if ($item->barcode_code && !str_starts_with($item->barcode_code, 'data:image')) {
+                    $item->barcode_code = 'data:image/png;base64,' . $item->barcode_code;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $riwayat
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal ambil riwayat antrian: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil riwayat.',
                 'error' => $e->getMessage()
             ], 500);
         }
