@@ -1,39 +1,40 @@
 @extends('layout.petugas.app')
 
 @section('content')
-<div class="container text-center">
-    <h3 class="mb-4">Scan QR Pasien</h3>
+<div class="container min-vh-100 d-flex flex-column justify-content-center align-items-center text-center">
+    <h3 class="mb-4 fw-bold text-primary">📷 Scan QR Pasien</h3>
 
-    <button class="btn btn-primary mb-4" onclick="startScan()">Mulai Scan</button>
+    <button class="btn btn-lg btn-outline-primary mb-4 shadow-sm px-5" onclick="startScan()">
+        <i class="bi bi-camera"></i> Mulai Scan
+    </button>
 
-    {{-- ✅ Tampilan kamera diperbesar dan ditengah --}}
-    <div class="d-flex justify-content-center">
-        <div id="reader" style="width: 400px; height: 400px;"></div>
+    <div class="rounded shadow border border-2" id="reader" style="width: 400px; height: 400px;"></div>
+
+    <div class="mt-4 w-100" style="max-width: 500px;">
+        <label for="hasilQR" class="form-label fw-semibold">Hasil QR:</label>
+        <input type="text" id="hasilQR" class="form-control text-center fw-bold text-success border-success" readonly>
     </div>
 
-    <div class="mt-4">
-        <label for="hasilQR" class="form-label">Hasil QR:</label>
-        <input type="text" id="hasilQR" class="form-control text-center" readonly>
-    </div>
+    <div id="alertArea" class="mt-4 w-100" style="max-width: 500px;"></div>
 </div>
 
-{{-- ✅ Script html5-qrcode --}}
+{{-- Script --}}
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
 function startScan() {
     const html5QrCode = new Html5Qrcode("reader");
+    const alertArea = document.getElementById("alertArea");
 
     html5QrCode.start(
         { facingMode: "environment" },
         {
             fps: 10,
-            qrbox: 300 // ukuran area deteksi QR
+            qrbox: 300
         },
         qrCodeMessage => {
             document.getElementById("hasilQR").value = qrCodeMessage;
             html5QrCode.stop();
 
-            // ✅ Kirim ke server untuk ubah status jadi selesai
             fetch("{{ route('petugas.antrian.updateStatus') }}", {
                 method: "POST",
                 headers: {
@@ -45,19 +46,25 @@ function startScan() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("✅ Status berhasil diubah menjadi selesai.");
+                    alertArea.innerHTML = `
+                        <div class="alert alert-success" role="alert">
+                            ✅ <strong>Berhasil!</strong> Status antrian diubah menjadi <b>selesai</b>.
+                        </div>`;
                 } else {
-                    alert("⚠️ Gagal ubah status: " + data.message);
+                    alertArea.innerHTML = `
+                        <div class="alert alert-warning" role="alert">
+                            ⚠️ <strong>Gagal:</strong> ${data.message}
+                        </div>`;
                 }
             })
             .catch(error => {
-                alert("❌ Terjadi kesalahan saat mengirim data.");
-                console.error(error);
+                alertArea.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        ❌ <strong>Kesalahan:</strong> Gagal mengirim data ke server.
+                    </div>`;
             });
         },
-        errorMessage => {
-            // optional: console.log(errorMessage);
-        }
+        errorMessage => {}
     ).catch(err => {
         alert("Gagal mengakses kamera: " + err);
     });

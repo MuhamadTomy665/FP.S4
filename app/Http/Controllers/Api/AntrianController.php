@@ -10,7 +10,6 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AntrianController extends Controller
 {
-    // ✅ Simpan Antrian Baru
     public function store(Request $request)
     {
         try {
@@ -21,11 +20,11 @@ class AntrianController extends Controller
                 'jam' => 'required|string|max:10',
             ]);
 
-            $kuotaPerJam = 10;
+            $kuotaPerJam = 6;
 
-            // Cek kuota
             $jumlahPasienJamIni = Antrian::where('tanggal', $validated['tanggal'])
                 ->where('jam', $validated['jam'])
+                ->where('poli', $validated['poli'])
                 ->count();
 
             if ($jumlahPasienJamIni >= $kuotaPerJam) {
@@ -35,7 +34,6 @@ class AntrianController extends Controller
                 ], 409);
             }
 
-            // Hitung nomor antrian
             $jumlahAntrianHariIni = Antrian::where('poli', $validated['poli'])
                 ->where('tanggal', $validated['tanggal'])
                 ->count();
@@ -43,12 +41,7 @@ class AntrianController extends Controller
             $nomorUrut = $jumlahAntrianHariIni + 1;
             $nomorAntrian = 'A' . sprintf('%04d', $nomorUrut);
 
-            // Generate kode dan barcode (✅ prefix langsung ditambahkan)
-            $kode = 'ANTRI-' . $validated['pasien_id'] . '-' . now()->format('YmdHis');
-            $qrCodeBase64 = 'data:image/png;base64,' . base64_encode(
-                QrCode::format('png')->size(250)->generate($kode)
-            );
-
+            // Simpan antrian terlebih dahulu tanpa barcode
             $antrian = Antrian::create([
                 'pasien_id' => $validated['pasien_id'],
                 'poli' => $validated['poli'],
@@ -56,6 +49,15 @@ class AntrianController extends Controller
                 'jam' => $validated['jam'],
                 'status' => 'antri',
                 'nomor_antrian' => $nomorAntrian,
+            ]);
+
+            // Setelah ID tersedia, buat kode unik dan barcode
+            $kode = 'ANTRI-' . $antrian->id . '-' . strtoupper(uniqid());
+            $qrCodeBase64 = 'data:image/png;base64,' . base64_encode(
+                QrCode::format('png')->size(250)->generate($kode)
+            );
+
+            $antrian->update([
                 'barcode_code' => $qrCodeBase64,
             ]);
 
@@ -78,7 +80,6 @@ class AntrianController extends Controller
         }
     }
 
-    // ✅ Ambil Antrian Terakhir untuk Pasien
     public function terakhir($pasien_id)
     {
         try {
@@ -111,7 +112,6 @@ class AntrianController extends Controller
         }
     }
 
-    // ✅ Ambil Semua Riwayat Antrian untuk Pasien
     public function riwayat($pasien_id)
     {
         try {
@@ -119,7 +119,6 @@ class AntrianController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // ✅ Pastikan semua barcode_code sudah punya prefix
             foreach ($riwayat as $item) {
                 if ($item->barcode_code && !str_starts_with($item->barcode_code, 'data:image')) {
                     $item->barcode_code = 'data:image/png;base64,' . $item->barcode_code;
@@ -137,6 +136,58 @@ class AntrianController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat mengambil riwayat.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getKuotaPerJam(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'poli' => 'required|string|max:100',
+                'tanggal' => 'required|date',
+            ]);
+
+            $kuotaPerJam = 6;
+
+            $jamOperasional = [
+                '08:00', '09:00', '10:00', '11:00', '12:00',
+                '13:00', '14:00', '15:00', '16:00', '17:00',
+                '18:00', '19:00', '20:00', '21:00'
+            ];
+
+            $result = [];
+
+            foreach ($jamOperasional as $jam) {
+                $jumlahPasien = Antrian::where('tanggal', $validated['tanggal'])
+                    ->where('jam', $jam)
+                    ->where('poli', $validated['poli'])
+                    ->count();
+
+                $tersisa = $kuotaPerJam - $jumlahPasien;
+                if ($tersisa < 0) $tersisa = 0;
+
+                $result[] = [
+                    'jam' => $jam,
+                    'kuota' => $kuotaPerJam,
+                    'terisi' => $jumlahPasien,
+                    'tersisa' => $tersisa,
+                    'penuh' => $jumlahPasien >= $kuotaPerJam,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal ambil kuota per jam: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data kuota per jam.',
                 'error' => $e->getMessage()
             ], 500);
         }

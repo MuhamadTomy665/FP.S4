@@ -29,6 +29,7 @@ class AntrianController extends Controller
         $antrian->waktu_dipanggil = now();
         $antrian->save();
 
+        // 🔔 Kirim event ke frontend via broadcasting
         event(new PanggilAntrianEvent($antrian));
 
         return redirect()->route('petugas.antrian.index')->with('success', 'Pasien telah dipanggil.');
@@ -57,7 +58,6 @@ class AntrianController extends Controller
             'kode' => 'required|string',
         ]);
 
-        // QR code menyimpan kode unik seperti "ANTRI-123-20240622..." atau yang Anda generate
         $antrian = Antrian::where('barcode_code', 'like', '%' . $request->kode . '%')->first();
 
         if (!$antrian) {

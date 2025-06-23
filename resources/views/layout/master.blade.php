@@ -21,7 +21,6 @@
 
   @include('layout.sidebar')
 
-  <!-- Konten utama -->
   <main class="content">
     <div class="container-fluid">
       <h2 class="mb-4">Manajemen Poli</h2>
@@ -32,14 +31,12 @@
         </div>
       @endif
 
-      <!-- Tombol Tambah Poli (dipindahkan ke atas tabel) -->
       <div class="mb-3">
         <button class="btn btn-success bg-success-subtle text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalTambahPoli">
           <i class="bi bi-plus"></i> Tambah Poli
         </button>
       </div>
 
-      <!-- Tabel Data Poli -->
       <div class="table-responsive mb-4">
         <table class="table table-bordered table-hover align-middle">
           <thead class="table-light">
@@ -100,7 +97,13 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Hari</label>
-            <input type="text" name="hari" class="form-control" required>
+            @php $daftarHari = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']; @endphp
+            @foreach ($daftarHari as $hari)
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="hari[]" value="{{ $hari }}" id="hari_{{ $hari }}">
+                <label class="form-check-label" for="hari_{{ $hari }}">{{ $hari }}</label>
+              </div>
+            @endforeach
           </div>
           <div class="mb-3">
             <label class="form-label">Jam Mulai</label>
@@ -140,7 +143,14 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Hari</label>
-            <input type="text" name="hari" class="form-control" required>
+            <div id="editHariContainer">
+              @foreach ($daftarHari as $hari)
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="hari[]" value="{{ $hari }}" id="edit_hari_{{ $hari }}">
+                  <label class="form-check-label" for="edit_hari_{{ $hari }}">{{ $hari }}</label>
+                </div>
+              @endforeach
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label">Jam Mulai</label>
@@ -177,13 +187,19 @@
             const form = document.getElementById('formEditPoli');
 
             form.nama_poli.value = data.nama_poli;
-            form.hari.value = data.hari;
             form.jam_mulai.value = data.jam_mulai;
             form.jam_selesai.value = data.jam_selesai;
             form.dokter.value = data.dokter;
 
-            form.action = `/poli/${poliId}`;
+            // Uncheck all checkboxes first
+            form.querySelectorAll('input[type="checkbox"][name="hari[]"]').forEach(cb => cb.checked = false);
+            const hariArray = data.hari.split(',');
+            hariArray.forEach(h => {
+              const checkbox = form.querySelector(`input[type="checkbox"][value="${h.trim()}"]`);
+              if (checkbox) checkbox.checked = true;
+            });
 
+            form.action = `/poli/${poliId}`;
             modal.show();
           })
           .catch(error => {

@@ -19,13 +19,17 @@ class DashboardController extends Controller
     {
         $request->validate([
             'nama_poli' => 'required|string',
-            'hari' => 'required|string',
+            'hari' => 'required|array',      // Ubah ke array
+            'hari.*' => 'string',            // Validasi tiap elemen array
             'jam_mulai' => 'required',
             'jam_selesai' => 'required',
             'dokter' => 'required|string',
         ]);
 
-        Poli::create($request->all());
+        $data = $request->all();
+        $data['hari'] = implode(',', $request->hari); // Gabungkan array jadi string
+
+        Poli::create($data);
 
         return redirect()->route('dashboard')->with('success', 'Poli berhasil ditambahkan.');
     }
@@ -43,14 +47,19 @@ class DashboardController extends Controller
     {
         $request->validate([
             'nama_poli' => 'required|string',
-            'hari' => 'required|string',
+            'hari' => 'required|array',      // Ubah ke array
+            'hari.*' => 'string',
             'jam_mulai' => 'required',
             'jam_selesai' => 'required',
             'dokter' => 'required|string',
         ]);
 
         $poli = Poli::findOrFail($id);
-        $poli->update($request->all());
+
+        $data = $request->all();
+        $data['hari'] = implode(',', $request->hari); // Gabungkan array jadi string
+
+        $poli->update($data);
 
         return redirect()->route('dashboard')->with('success', 'Data poli berhasil diperbarui.');
     }
