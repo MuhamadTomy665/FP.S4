@@ -37,6 +37,11 @@ Route::get('/poli/{id}', [PoliController::class, 'show']); // detail satu poli
 // ==============================
 // 📌 Antrian
 // ==============================
-Route::post('/antrian', [AntrianController::class, 'store']);               // pasien mendaftar antrian
+Route::post('/antrian', [AntrianController::class, 'store']);                 // pasien mendaftar antrian
 Route::get('/antrian/terakhir/{id}', [AntrianController::class, 'terakhir']); // ✅ ambil antrian terakhir pasien
 Route::get('/antrian/riwayat/{id}', [AntrianController::class, 'riwayat']);   // ✅ ambil riwayat antrian pasien
+
+// ==============================
+// 📌 Kuota Antrian Per Jam (Baru ditambahkan)
+// ==============================
+Route::get('/antrian/kuota', [AntrianController::class, 'getKuotaPerJam']);   // Cek kuota per jam berdasarkan poli dan tanggal

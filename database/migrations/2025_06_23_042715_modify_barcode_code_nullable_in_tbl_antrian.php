@@ -4,19 +4,16 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
         Schema::table('tbl_antrian', function (Blueprint $table) {
-            $table->string('barcode_code')->nullable()->after('nomor_antrian');
+            $table->longText('barcode_code')->nullable()->change();
         });
     }
 
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('tbl_antrian', function (Blueprint $table) {
-            $table->dropColumn('barcode_code');
+            $table->longText('barcode_code')->nullable(false)->change();
         });
     }
 };

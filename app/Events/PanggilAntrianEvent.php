@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Antrian;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -9,7 +10,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Antrian;
 
 class PanggilAntrianEvent implements ShouldBroadcast
 {
@@ -24,11 +24,11 @@ class PanggilAntrianEvent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('antrian-channel');
+        return new Channel('antrian-channel'); // publik, bisa diganti ke private kalau butuh auth
     }
 
     public function broadcastAs()
     {
-        return 'antrian-dipanggil';
+        return 'antrian-dipanggil'; // nama event yang akan didengar di frontend
     }
 }
