@@ -6,8 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
   <title>Dashboard - Manajemen Poli</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
@@ -26,19 +26,17 @@
       <h2 class="mb-4">Manajemen Poli</h2>
 
       @if(session('success'))
-        <div class="alert alert-success">
-          {{ session('success') }}
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
       @endif
 
       <div class="mb-3">
-        <button class="btn btn-success bg-success-subtle text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalTambahPoli">
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahPoli">
           <i class="bi bi-plus"></i> Tambah Poli
         </button>
       </div>
 
       <div class="table-responsive mb-4">
-        <table class="table table-bordered table-hover align-middle">
+        <table class="table table-bordered">
           <thead class="table-light">
             <tr>
               <th>Nama Poli</th>
@@ -57,11 +55,11 @@
               <td>{{ $poli->jam_mulai }}</td>
               <td>{{ $poli->jam_selesai }}</td>
               <td>{{ $poli->dokter }}</td>
-              <td class="d-flex gap-1">
+              <td>
                 <button type="button" class="btn btn-sm btn-warning btn-edit" data-id="{{ $poli->id }}">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <form action="{{ route('poli.hapus', $poli->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data?')">
+                <form action="{{ route('poli.hapus', $poli->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus data?')">
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-sm btn-danger">
@@ -81,13 +79,13 @@
     </div>
   </main>
 
-  <!-- Modal Tambah Poli -->
+  <!-- Modal Tambah -->
   <div class="modal fade" id="modalTambahPoli" tabindex="-1" aria-labelledby="modalTambahPoliLabel" aria-hidden="true">
     <div class="modal-dialog">
-      <form method="POST" action="{{ route('poli.simpan') }}" class="modal-content">
+      <form method="POST" action="{{ route('poli.simpan') }}" class="modal-content" onsubmit="return validateJam(this)">
         @csrf
         <div class="modal-header">
-          <h5 class="modal-title" id="modalTambahPoliLabel">Tambah Poli</h5>
+          <h5 class="modal-title">Tambah Poli</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -119,21 +117,21 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary">Simpan</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal Edit Poli -->
-  <div class="modal fade" id="modalEditPoli" tabindex="-1" aria-labelledby="modalEditPoliLabel" aria-hidden="true">
+  <!-- Modal Edit -->
+  <div class="modal fade" id="modalEditPoli" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-      <form method="POST" class="modal-content" id="formEditPoli">
+      <form method="POST" class="modal-content" id="formEditPoli" onsubmit="return validateJam(this)">
         @csrf
         @method('PUT')
         <div class="modal-header">
-          <h5 class="modal-title" id="modalEditPoliLabel">Edit Poli</h5>
+          <h5 class="modal-title">Edit Poli</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -166,45 +164,44 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Perbarui</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary">Perbarui</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
+    function validateJam(form) {
+      const jamMulai = form.querySelector('input[name="jam_mulai"]').value;
+      const jamSelesai = form.querySelector('input[name="jam_selesai"]').value;
+      if (jamMulai && jamSelesai && jamSelesai <= jamMulai) {
+        alert("Jam selesai harus lebih besar dari jam mulai.");
+        return false;
+      }
+      return true;
+    }
+
     document.querySelectorAll('.btn-edit').forEach(button => {
       button.addEventListener('click', () => {
-        const poliId = button.getAttribute('data-id');
-
-        fetch(`/poli/${poliId}/edit`)
-          .then(response => response.json())
+        const id = button.getAttribute('data-id');
+        fetch(`/poli/${id}/edit`)
+          .then(res => res.json())
           .then(data => {
             const modal = new bootstrap.Modal(document.getElementById('modalEditPoli'));
             const form = document.getElementById('formEditPoli');
-
             form.nama_poli.value = data.nama_poli;
             form.jam_mulai.value = data.jam_mulai;
             form.jam_selesai.value = data.jam_selesai;
             form.dokter.value = data.dokter;
-
-            // Uncheck all checkboxes first
-            form.querySelectorAll('input[type="checkbox"][name="hari[]"]').forEach(cb => cb.checked = false);
-            const hariArray = data.hari.split(',');
-            hariArray.forEach(h => {
-              const checkbox = form.querySelector(`input[type="checkbox"][value="${h.trim()}"]`);
-              if (checkbox) checkbox.checked = true;
+            form.action = `/poli/${id}`;
+            form.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+            data.hari.split(',').forEach(hari => {
+              const cb = form.querySelector(`input[value="${hari.trim()}"]`);
+              if (cb) cb.checked = true;
             });
-
-            form.action = `/poli/${poliId}`;
             modal.show();
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert('Gagal mengambil data poli.');
           });
       });
     });

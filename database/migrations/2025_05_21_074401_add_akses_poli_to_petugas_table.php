@@ -8,10 +8,10 @@ class AddAksesPoliToPetugasTable extends Migration
 {
     public function up()
     {
-       // Schema::table('petugas', function (Blueprint $table) {
-          //  $table->string('akses_poli')->nullable()->after('role'); 
-            // Misal menyimpan daftar id poli dalam format JSON atau CSV
-        //});
+        Schema::table('petugas', function (Blueprint $table) {
+            $table->json('akses_poli')->nullable()->after('role');
+            // Menyimpan data akses_poli dalam format array JSON
+        });
     }
 
     public function down()

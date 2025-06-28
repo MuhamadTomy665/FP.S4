@@ -13,10 +13,14 @@ class AntrianController extends Controller
 {
     public function index()
     {
+        $petugas = Auth::user(); // ambil petugas yang sedang login
+        $aksesPoli = $petugas->akses_poli; // diasumsikan menyimpan nama poli
+
         $dataAntrian = Antrian::with('poli', 'pasien')
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('tanggal', Carbon::today()) // hanya hari ini
+            ->where('poli', $aksesPoli) // filter berdasarkan poli yang diakses
             ->orderBy('status')
-            ->orderBy('created_at')
+            ->orderBy('jam')
             ->get();
 
         return view('petugas.antrian', compact('dataAntrian'));
@@ -75,5 +79,12 @@ class AntrianController extends Controller
             'success' => true,
             'message' => 'Status berhasil diperbarui menjadi selesai.',
         ]);
+    }
+
+    // ✅ CETAK QR Antrian
+    public function cetak($id)
+    {
+        $antrian = Antrian::with('pasien')->findOrFail($id);
+        return view('petugas.cetak', compact('antrian'));
     }
 }
