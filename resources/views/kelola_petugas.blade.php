@@ -30,12 +30,9 @@
                     <td>{{ $petugas->nama }}</td>
                     <td>{{ $petugas->email }}</td>
                     <td>
-                        @if($petugas->akses_poli)
-                            @foreach($petugas->akses_poli as $poliId)
-                                @php
-                                  $poli = \App\Models\Poli::find($poliId);
-                                @endphp
-                                <span class="badge bg-info text-dark">{{ $poli?->nama_poli ?? 'Unknown' }}</span>
+                        @if($petugas->akses_poli && is_array($petugas->akses_poli))
+                            @foreach($petugas->akses_poli as $namaPoli)
+                                <span class="badge bg-info text-dark">{{ $namaPoli }}</span>
                             @endforeach
                         @else
                             <span class="text-muted">Tidak ada akses</span>
@@ -71,22 +68,37 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        {{-- Tampilkan error validasi jika ada --}}
+        @if($errors->any())
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+          </div>
+        @endif
+
         <div class="mb-3">
           <label for="nama" class="form-label">Nama</label>
-          <input type="text" name="nama" class="form-control" required>
+          <input type="text" name="nama" class="form-control" required value="{{ old('nama') }}">
         </div>
         <div class="mb-3">
           <label for="email" class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" required>
+          <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
         </div>
         <div class="mb-3">
           <label for="password" class="form-label">Password</label>
           <input type="password" name="password" class="form-control" required>
         </div>
+
         <label>Akses Poli:</label><br>
         @foreach($allPoli as $poli)
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="akses_poli[]" value="{{ $poli->id }}" id="poli{{ $poli->id }}">
+                <input class="form-check-input" type="checkbox" name="akses_poli[]"
+                       value="{{ $poli->id }}"
+                       id="poli{{ $poli->id }}"
+                       {{ is_array(old('akses_poli')) && in_array($poli->id, old('akses_poli')) ? 'checked' : '' }}>
                 <label class="form-check-label" for="poli{{ $poli->id }}">{{ $poli->nama_poli }}</label>
             </div>
         @endforeach
@@ -98,4 +110,15 @@
     </form>
   </div>
 </div>
+
+{{-- Jika validasi gagal, buka modal otomatis --}}
+@if($errors->any())
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var modal = new bootstrap.Modal(document.getElementById('modalTambahPetugas'));
+      modal.show();
+    });
+  </script>
+@endif
+
 @endsection

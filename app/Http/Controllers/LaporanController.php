@@ -10,19 +10,26 @@ class LaporanController extends Controller
 {
     public function index()
     {
+        // Hitung total pasien
         $totalPasien = Antrian::count();
 
-        $rataRataWaktuTunggu = Antrian::avg('waktu_tunggu');
+        // Hitung rata-rata waktu tunggu (selisih jam dan waktu_dipanggil dalam menit)
+        $rataRataWaktuTunggu = Antrian::whereNotNull('waktu_dipanggil')
+            ->select(DB::raw('AVG(TIMESTAMPDIFF(MINUTE, jam, waktu_dipanggil)) as rata_rata'))
+            ->value('rata_rata');
+
         $rataRataWaktuTunggu = $rataRataWaktuTunggu ? round($rataRataWaktuTunggu, 2) . ' menit' : '0 menit';
 
-        $performaHariRaw = Antrian::select(
-            DB::raw('DATE(created_at) as tanggal'),
-            DB::raw('COUNT(*) as total_pasien'),
-            DB::raw('AVG(waktu_tunggu) as rata_rata_tunggu')
-        )
-        ->groupBy('tanggal')
-        ->orderBy('tanggal', 'desc')
-        ->get();
+        // Performa per hari
+        $performaHariRaw = Antrian::whereNotNull('waktu_dipanggil')
+            ->select(
+                DB::raw('DATE(created_at) as tanggal'),
+                DB::raw('COUNT(*) as total_pasien'),
+                DB::raw('AVG(TIMESTAMPDIFF(MINUTE, jam, waktu_dipanggil)) as rata_rata_tunggu')
+            )
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy(DB::raw('DATE(created_at)'), 'desc')
+            ->get();
 
         $performaHari = [];
         foreach ($performaHariRaw as $item) {
@@ -32,17 +39,19 @@ class LaporanController extends Controller
             ];
         }
 
-        $performaPoliRaw = Antrian::select(
-            'poli.nama_poli',
-            DB::raw('COUNT(antrian.id) as total_pasien'),
-            DB::raw('AVG(antrian.waktu_tunggu) as rata_rata_tunggu')
-        )
-        ->join('tbl_poli as poli', 'antrian.poli_id', '=', 'poli.id')
-        ->groupBy('poli.id', 'poli.nama_poli')
-        ->orderBy('poli.nama_poli')
-        ->get();
+        // Performa per poli
+        $performaPoliRaw = Antrian::whereNotNull('waktu_dipanggil')
+            ->join('tbl_poli as poli', 'tbl_antrian.poli', '=', 'poli.nama_poli')
+            ->select(
+                'poli.nama_poli',
+                DB::raw('COUNT(tbl_antrian.id) as total_pasien'),
+                DB::raw('AVG(TIMESTAMPDIFF(MINUTE, jam, waktu_dipanggil)) as rata_rata_tunggu')
+            )
+            ->groupBy('poli.nama_poli')
+            ->orderBy('poli.nama_poli')
+            ->get();
 
-        $performaPoli = $performaPoliRaw->map(function($item){
+        $performaPoli = $performaPoliRaw->map(function ($item) {
             return [
                 'nama_poli' => $item->nama_poli,
                 'total_pasien' => $item->total_pasien,
@@ -51,9 +60,9 @@ class LaporanController extends Controller
         })->toArray();
 
         return view('laporan_antrian', compact(
-            'totalPasien', 
-            'rataRataWaktuTunggu', 
-            'performaHari', 
+            'totalPasien',
+            'rataRataWaktuTunggu',
+            'performaHari',
             'performaPoli'
         ));
     }

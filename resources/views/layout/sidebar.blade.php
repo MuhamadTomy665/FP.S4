@@ -23,7 +23,7 @@
 <div class="sidebar bg-light d-flex flex-column p-3 border-end position-fixed vh-100" style="width: 250px; left: 0; top: 0; overflow-y: auto;">
     <a href="{{ route('dashboard') }}" class="d-flex align-items-center mb-3 text-decoration-none">
         <img src="{{ asset('images/logo-rs.png') }}" alt="Logo RS JIWA" width="40" height="40" class="me-2">
-        <span class="fs-4 fw-bold text-dark">RS JIWA</span>
+        <span class="fs-4 fw-bold text-dark">PadaSehat Medical Care</span>
     </a>
     <hr>
 

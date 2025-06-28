@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Pasien;
+use App\Models\Poli;
 
 class Antrian extends Model
 {
@@ -22,7 +24,7 @@ class Antrian extends Model
     ];
 
     /**
-     * Relasi ke pasien
+     * Relasi ke tabel pasien
      */
     public function pasien()
     {
@@ -30,12 +32,10 @@ class Antrian extends Model
     }
 
     /**
-     * Relasi ke poli berdasarkan nama_poli (karena kolom 'poli' menyimpan string nama)
+     * Relasi ke tabel poli berdasarkan nama_poli (karena kolom 'poli' menyimpan string nama)
      */
     public function poli()
     {
         return $this->belongsTo(Poli::class, 'poli', 'nama_poli');
-        // foreign key di tbl_antrian = 'poli'
-        // owner key di tbl_poli = 'nama_poli'
     }
 }

@@ -10,93 +10,138 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    // REGISTER
+    // ✅ REGISTER
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'nik' => 'required|string|max:20|unique:tbl_pasien,nik',
-            'no_hp' => 'required|string|max:20',
+            'name'     => 'required|string|max:255',
+            'nik'      => 'required|string|max:20|unique:tbl_pasien,nik',
+            'no_hp'    => 'required|string|max:20',
             'password' => 'required|string|min:6',
         ]);
 
         $pasien = Pasien::create([
-            'name' => $request->name,
-            'nik' => $request->nik,
-            'no_hp' => $request->no_hp,
-            'password' => Hash::make($request->password),
+            'name'     => trim($request->name),
+            'nik'      => trim($request->nik),
+            'no_hp'    => trim($request->no_hp),
+            'password' => Hash::make(trim($request->password)), // ✅ pastikan password bersih dari spasi
         ]);
 
         $token = $pasien->createToken('pasien_token')->plainTextToken;
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Registrasi berhasil',
-            'data' => $pasien,
-            'token' => $token,
+            'data'    => $pasien,
+            'token'   => $token,
         ], 201);
     }
 
-    // LOGIN
+    // ✅ LOGIN
     public function login(Request $request)
     {
         $request->validate([
-            'nik' => 'required|string',
-            'password' => 'required|string',
+            'nik'      => 'required|string|max:20',
+            'password' => 'required|string|min:6',
         ]);
 
-        Log::info('Percobaan login', [
-            'nik' => $request->nik,
-            // Jangan log password demi keamanan
-        ]);
+        $nik = trim($request->nik);
+        $password = trim($request->password);
 
-        $pasien = Pasien::where('nik', $request->nik)->first();
+        Log::info('Percobaan login', ['nik' => $nik]);
 
-        if (!$pasien) {
-            Log::warning('Login gagal: NIK tidak ditemukan', ['nik' => $request->nik]);
+        $pasien = Pasien::whereRaw('TRIM(nik) = ?', [$nik])->first();
+
+        if (!$pasien || !Hash::check($password, $pasien->password)) {
+            Log::warning('Login gagal', [
+                'nik_input' => $nik,
+                'pasien_ditemukan' => (bool) $pasien,
+            ]);
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'NIK atau password salah',
             ], 401);
         }
 
-        if (!Hash::check($request->password, $pasien->password)) {
-            Log::warning('Login gagal: Password salah', ['nik' => $request->nik]);
-            return response()->json([
-                'status' => false,
-                'message' => 'NIK atau password salah',
-            ], 401);
-        }
-
-        Log::info('Login berhasil', ['nik' => $request->nik]);
+        Log::info('Login berhasil', ['nik' => $nik]);
 
         $token = $pasien->createToken('pasien_token')->plainTextToken;
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Login berhasil',
-            'data' => $pasien,
-            'token' => $token,
+            'data'    => $pasien,
+            'token'   => $token,
         ]);
     }
 
-    // PROFILE
+    // ✅ PROFILE
     public function profile(Request $request)
     {
         return response()->json([
             'status' => true,
-            'data' => $request->user(),
+            'data'   => $request->user(),
         ]);
     }
 
-    // LOGOUT
+    // ✅ LOGOUT
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Logout berhasil',
+        ]);
+    }
+
+    // ✅ CEK NIK UNTUK LUPA PASSWORD
+    public function cekNik(Request $request)
+    {
+        $request->validate([
+            'nik' => 'required|string'
+        ]);
+
+        $nik = trim($request->nik);
+        $pasien = Pasien::whereRaw('TRIM(nik) = ?', [$nik])->first();
+
+        if (!$pasien) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'NIK tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'NIK valid'
+        ]);
+    }
+
+    // ✅ RESET PASSWORD
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'nik'      => 'required|string',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $nik = trim($request->nik);
+        $pasien = Pasien::whereRaw('TRIM(nik) = ?', [$nik])->first();
+
+        if (!$pasien) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'NIK tidak ditemukan'
+            ], 404);
+        }
+
+        $pasien->password = Hash::make(trim($request->password));
+        $pasien->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Password berhasil diubah.'
         ]);
     }
 }

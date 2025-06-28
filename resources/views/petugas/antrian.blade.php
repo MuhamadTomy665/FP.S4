@@ -26,7 +26,7 @@
             @forelse($dataAntrian as $index => $antrian)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $antrian->pasien->nama ?? '-' }}</td>
+                    <td>{{ $antrian->pasien->name ?? '-' }}</td> {{-- ✅ Diubah dari nama ke name --}}
                     <td>{{ $antrian->poli->nama ?? $antrian->poli }}</td>
                     <td>{{ $antrian->jam }}</td>
                     <td>{{ $antrian->nomor_antrian }}</td>
@@ -52,9 +52,9 @@
                             </form>
                         @endif
 
-                        {{-- ✅ Tombol Scan QR mengarah ke halaman scan --}}
-                        <a href="{{ route('petugas.scan') }}" class="btn btn-sm btn-warning">
-                            Scan QR
+                        {{-- ✅ Tombol Cetak QR --}}
+                        <a href="{{ route('petugas.antrian.cetak', $antrian->id) }}" class="btn btn-sm btn-warning" target="_blank">
+                            Cetak QR
                         </a>
                     </td>
                 </tr>

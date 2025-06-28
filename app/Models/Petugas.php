@@ -10,7 +10,7 @@ class Petugas extends Authenticatable
 {
     use HasFactory;
 
-    // Nama tabel harus sesuai migration
+    // Nama tabel
     protected $table = 'petugas';
 
     protected $fillable = [
@@ -18,29 +18,31 @@ class Petugas extends Authenticatable
         'email',
         'password',
         'role',
-        'akses_poli',
+        'akses_poli', // akan menyimpan array nama poli
     ];
 
+    // Cast ke array agar JSON disimpan sebagai array
     protected $casts = [
         'akses_poli' => 'array',
     ];
 
+    // Hidden untuk keamanan
     protected $hidden = [
         'password',
-        'remember_token', // pastikan kolom ini ada di tabel jika dipakai
+        'remember_token',
     ];
 
-    // Mutator untuk meng-hash password otomatis, tapi hindari hash ulang jika sudah terenkripsi
+    // Otomatis hash password jika belum terhash
     public function setPasswordAttribute($value)
     {
         if (Str::startsWith($value, '$2y$')) {
-            $this->attributes['password'] = $value; // sudah hashed
+            $this->attributes['password'] = $value; // sudah terenkripsi
         } else {
             $this->attributes['password'] = bcrypt($value);
         }
     }
 
-    // Relasi many-to-many dengan poli (opsional, sesuaikan nama tabel pivot)
+    // Optional: relasi jika menggunakan tabel pivot (jika nanti ingin relasi lebih kompleks)
     public function polis()
     {
         return $this->belongsToMany(Poli::class, 'petugas_poli', 'petugas_id', 'poli_id');
