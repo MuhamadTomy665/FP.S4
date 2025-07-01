@@ -26,8 +26,13 @@
             @forelse($dataAntrian as $index => $antrian)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $antrian->pasien->name ?? '-' }}</td> {{-- ✅ Diubah dari nama ke name --}}
+
+                    {{-- ✅ Menampilkan nama pasien dari relasi --}}
+                    <td>{{ $antrian->pasien->name ?? '-' }}</td>
+
+                    {{-- ✅ Menampilkan nama poli --}}
                     <td>{{ $antrian->poli->nama ?? $antrian->poli }}</td>
+
                     <td>{{ $antrian->jam }}</td>
                     <td>{{ $antrian->nomor_antrian }}</td>
                     <td>

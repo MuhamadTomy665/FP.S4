@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
-use Laravel\Sanctum\HasApiTokens; // ✅ tambahkan ini
+use Illuminate\Foundation\Auth\User as Authenticatable; // ✅ ganti ke Authenticatable
+use Laravel\Sanctum\HasApiTokens;
 
-class Pasien extends Model
+class Pasien extends Authenticatable
 {
-    use HasApiTokens, HasFactory; // ✅ gunakan trait-nya
+    use HasApiTokens, HasFactory;
 
     protected $table = 'tbl_pasien';
 
@@ -20,12 +19,7 @@ class Pasien extends Model
         'password',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($pasien) {
-            $pasien->password = Hash::make($pasien->password);
-        });
-    }
-}
+    protected $hidden = [
+        'password', // agar tidak tampil saat `->toArray()` / API response
+    ];
+} 
