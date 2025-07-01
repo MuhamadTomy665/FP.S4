@@ -24,7 +24,7 @@ class Antrian extends Model
     ];
 
     /**
-     * Relasi ke tabel pasien
+     * ✅ Relasi ke tabel pasien berdasarkan pasien_id (FK)
      */
     public function pasien()
     {
@@ -32,7 +32,7 @@ class Antrian extends Model
     }
 
     /**
-     * Relasi ke tabel poli berdasarkan nama_poli (karena kolom 'poli' menyimpan string nama)
+     * ✅ Relasi ke tabel poli berdasarkan nama_poli karena kolom 'poli' di antrian menyimpan nama
      */
     public function poli()
     {

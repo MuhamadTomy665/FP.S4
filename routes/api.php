@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -17,36 +16,40 @@ use App\Http\Controllers\Api\PencarianController;
 // ==============================
 // 📌 AUTH (Pasien: Registrasi, Login, Lupa Password)
 // ==============================
-Route::post('/register', [AuthController::class, 'register']);              // Daftar pasien baru
-Route::post('/login', [AuthController::class, 'login']);                    // Login dengan NIK & password
-Route::post('/cek-nik', [AuthController::class, 'cekNik']);                // Cek apakah NIK valid (lupa password)
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);  // Reset password berdasarkan NIK
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/cek-nik', [AuthController::class, 'cekNik']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // ==============================
 // 📌 Endpoint Profil (Butuh Token Login dari Pasien)
 // ==============================
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/profile', [AuthController::class, 'profile']);    // Info akun login
-    Route::post('/logout', [AuthController::class, 'logout']);     // Logout & hapus token
-    Route::get('/user', fn (Request $request) => $request->user()); // Get user auth info
+
+    // 👤 Profil
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', fn (Request $request) => $request->user());
+
+    // 🏥 Antrian (dengan auth & ID dari token)
+    Route::post('/antrian', [AntrianController::class, 'store']);
+    Route::get('/antrian/terakhir', [AntrianController::class, 'terakhir']);     // tanpa {id}
+    Route::get('/antrian/riwayat', [AntrianController::class, 'riwayat']);       // tanpa {id}
+    Route::post('/antrian/{id}/batal', [AntrianController::class, 'batalkan']);  // tetap pakai ID antrian
 });
 
 // ==============================
 // 📌 Poli
 // ==============================
-Route::get('/poli', [PoliController::class, 'index']);     // List semua poli
-Route::get('/poli/{id}', [PoliController::class, 'show']); // Detail poli by ID
+Route::get('/poli', [PoliController::class, 'index']);
+Route::get('/poli/{id}', [PoliController::class, 'show']);
 
 // ==============================
-// 📌 Antrian
+// 📌 Kuota per jam (tidak perlu login karena hanya membaca data)
 // ==============================
-Route::post('/antrian', [AntrianController::class, 'store']);                  // Daftar antrian
-Route::get('/antrian/terakhir/{id}', [AntrianController::class, 'terakhir']);  // Antrian terakhir pasien
-Route::get('/antrian/riwayat/{id}', [AntrianController::class, 'riwayat']);    // Riwayat antrian
-Route::get('/antrian/kuota', [AntrianController::class, 'getKuotaPerJam']);    // Kuota per jam
-Route::post('/antrian/{id}/batal', [AntrianController::class, 'batalkan']);    // ✅ Batalkan antrian
+Route::get('/antrian/kuota', [AntrianController::class, 'getKuotaPerJam']);
 
 // ==============================
 // 📌 Pencarian
 // ==============================
-Route::get('/pencarian', [PencarianController::class, 'cari']); // Pencarian antrian
+Route::get('/pencarian', [PencarianController::class, 'cari']);
